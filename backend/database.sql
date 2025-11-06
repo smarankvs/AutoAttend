@@ -10,8 +10,9 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) UNIQUE NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
-    role ENUM('student', 'teacher', 'admin') NOT NULL DEFAULT 'student',
+    role ENUM('student', 'teacher') NOT NULL DEFAULT 'student',
     student_id VARCHAR(20) UNIQUE NULL,  -- For students only
+    branch VARCHAR(100) NULL,  -- Branch/Department for students and teachers
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -78,12 +79,12 @@ CREATE TABLE IF NOT EXISTS attendance (
     INDEX idx_attendance_date (attendance_date)
 );
 
--- Insert default admin user (password: admin123)
+-- Insert sample teacher (password: admin123)
 -- Password hash for 'admin123' using bcrypt
 INSERT INTO users (username, email, full_name, hashed_password, role) VALUES
-('admin', 'admin@autoattend.edu', 'System Administrator', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5r3J.HCKjEGt2', 'admin');
-
--- Insert sample teacher
-INSERT INTO users (username, email, full_name, hashed_password, role) VALUES
 ('teacher1', 'teacher1@autoattend.edu', 'John Teacher', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5r3J.HCKjEGt2', 'teacher');
+
+-- Insert sample student (password: admin123)
+INSERT INTO users (username, email, full_name, hashed_password, role, student_id) VALUES
+('student1', 'student1@autoattend.edu', 'John Student', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5r3J.HCKjEGt2', 'student', 'S001');
 

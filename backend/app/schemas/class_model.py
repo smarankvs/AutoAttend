@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -23,7 +23,19 @@ class ClassResponse(BaseModel):
         from_attributes = True
 
 
+class ClassUpdate(BaseModel):
+    class_name: Optional[str] = None
+    class_code: Optional[str] = None
+    description: Optional[str] = None
+    cctv_feed_url: Optional[str] = None
+
+
 class EnrollmentCreate(BaseModel):
     student_id: int
+    class_id: int
+
+
+class BulkEnrollmentCreate(BaseModel):
+    student_ids: List[int]
     class_id: int
 

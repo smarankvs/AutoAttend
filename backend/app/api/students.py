@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 import os
 import numpy as np
 from app.core.database import get_db
-from app.core.dependencies import get_current_teacher, get_current_admin
-from app.schemas.user import UserCreate, UserResponse
+from app.core.dependencies import get_current_user, get_current_teacher
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.models.user import User, StudentPhoto
 from app.services.facial_recognition import facial_recognition_service
 
@@ -44,7 +44,8 @@ def create_student(
         full_name=full_name,
         hashed_password=hashed_password,
         role="student",
-        student_id=student_id
+        student_id=student_id,
+        branch=None  # Branch can be set later if needed
     )
     
     db.add(new_student)
@@ -58,10 +59,17 @@ def create_student(
 def upload_student_photo(
     student_id: int,
     photo: UploadFile = File(...),
-    current_user: User = Depends(get_current_teacher),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Upload a photo for facial recognition."""
+    # Allow teachers to upload for any student, students can only upload their own
+    if current_user.role != "teacher" and current_user.user_id != student_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions. You can only upload your own photos."
+        )
+    
     student = db.query(User).filter(User.user_id == student_id, User.role == "student").first()
     
     if not student:
@@ -134,17 +142,66 @@ def get_all_students(
     db: Session = Depends(get_db)
 ):
     """Get all students."""
-    students = db.query(User).filter(User.role == "student").all()
+    students = db.query(User).filter(User.role == "student").options(joinedload(User.photos)).all()
     return students
+
+
+@router.put("/{student_id}/profile", response_model=UserResponse)
+def update_student_profile(
+    student_id: int,
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update student profile (branch and year of joining). Teachers can update any student, students can only update themselves."""
+    student = db.query(User).filter(User.user_id == student_id, User.role == "student").first()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student not found"
+        )
+    
+    # Check permissions: teachers can update any student, students can only update themselves
+    if current_user.role != "teacher" and current_user.user_id != student_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions. You can only update your own profile."
+        )
+    
+    # Validate branch if provided
+    if user_update.branch is not None:
+        allowed_branches = ['CSE', 'ISE', 'ECE', 'AIML', 'AICY', 'MEC', 'CIV']
+        if user_update.branch.upper() not in [b.upper() for b in allowed_branches]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid branch. Please select one of: {', '.join(allowed_branches)}"
+            )
+        student.branch = user_update.branch.upper()
+    
+    # Validate year_of_joining if provided
+    if user_update.year_of_joining is not None:
+        current_year = 2025  # You can make this dynamic
+        if user_update.year_of_joining < 2000 or user_update.year_of_joining > current_year + 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid year of joining. Please enter a year between 2000 and {current_year + 1}."
+            )
+        student.year_of_joining = user_update.year_of_joining
+    
+    db.commit()
+    db.refresh(student)
+    
+    return student
 
 
 @router.delete("/{student_id}")
 def delete_student(
     student_id: int,
-    current_user: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_teacher),
     db: Session = Depends(get_db)
 ):
-    """Delete a student (Admin only)."""
+    """Delete a student (Teachers only)."""
     student = db.query(User).filter(User.user_id == student_id, User.role == "student").first()
     
     if not student:

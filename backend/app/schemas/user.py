@@ -10,6 +10,8 @@ class UserCreate(BaseModel):
     password: str
     role: str = "student"
     student_id: Optional[str] = None
+    branch: Optional[str] = None
+    year_of_joining: Optional[int] = None
 
 
 class UserLogin(BaseModel):
@@ -22,6 +24,21 @@ class Token(BaseModel):
     token_type: str
 
 
+class StudentPhotoResponse(BaseModel):
+    photo_id: int
+    photo_path: str
+    is_primary: bool
+    uploaded_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    branch: Optional[str] = None
+    year_of_joining: Optional[int] = None
+
+
 class UserResponse(BaseModel):
     user_id: int
     username: str
@@ -29,8 +46,10 @@ class UserResponse(BaseModel):
     full_name: str
     role: str
     student_id: Optional[str]
+    branch: Optional[str] = None
+    year_of_joining: Optional[int] = None
     is_active: bool
+    primary_photo: Optional[StudentPhotoResponse] = None
 
     class Config:
         from_attributes = True
-

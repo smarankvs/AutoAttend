@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.models.user import User
@@ -31,7 +31,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(User.username == username).options(joinedload(User.photos)).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -46,22 +46,10 @@ def get_current_teacher(
     current_user: User = Depends(get_current_user)
 ) -> User:
     """Get current user and verify they are a teacher."""
-    if current_user.role != "teacher" and current_user.role != "admin":
+    if current_user.role != "teacher":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions. Teacher or admin access required."
-        )
-    return current_user
-
-
-def get_current_admin(
-    current_user: User = Depends(get_current_user)
-) -> User:
-    """Get current user and verify they are an admin."""
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions. Admin access required."
+            detail="Not enough permissions. Teacher access required."
         )
     return current_user
 

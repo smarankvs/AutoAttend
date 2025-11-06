@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserCircleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 
@@ -96,8 +96,17 @@ const Login = () => {
 
           <div className="mt-6 text-center text-sm text-gray-600">
             <p>Demo Credentials:</p>
-            <p className="mt-1">Student: student1 / student123</p>
+            <p className="mt-1">Student: student1 / admin123</p>
             <p>Teacher: teacher1 / admin123</p>
+          </div>
+
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary-600 hover:text-primary-800 font-semibold">
+                Register here
+              </Link>
+            </p>
           </div>
         </div>
       </div>

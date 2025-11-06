@@ -7,6 +7,8 @@ import {
   PhotoIcon,
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
+  UserCircleIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { getClasses, getMyClasses, getMyStats, scanClassAttendance } from '../services/api';
 
@@ -85,14 +87,27 @@ const Dashboard = () => {
         {user.role === 'student' && (
           <div className="space-y-8">
             <div className="bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Your Attendance Statistics</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Your Attendance Statistics</h2>
+                {stats && stats.period_start_date && (
+                  <div className="text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded-lg">
+                    <span className="font-semibold">Period:</span> Last {stats.period_months || 6} months
+                    {stats.period_start_date && (
+                      <span className="ml-2">
+                        ({new Date(stats.period_start_date).toLocaleDateString()} - {new Date(stats.period_end_date || Date.now()).toLocaleDateString()})
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
               {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-blue-100">Total Classes</p>
                         <p className="text-4xl font-bold mt-2">{stats.total_classes}</p>
+                        <p className="text-blue-200 text-xs mt-1">(Last {stats.period_months || 6} months)</p>
                       </div>
                       <ClipboardDocumentCheckIcon className="h-12 w-12 opacity-80" />
                     </div>
@@ -103,8 +118,20 @@ const Dashboard = () => {
                       <div>
                         <p className="text-green-100">Present</p>
                         <p className="text-4xl font-bold mt-2">{stats.present_count}</p>
+                        <p className="text-green-200 text-xs mt-1">Classes attended</p>
                       </div>
                       <ChartBarIcon className="h-12 w-12 opacity-80" />
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-red-100">Absent</p>
+                        <p className="text-4xl font-bold mt-2">{stats.absent_count || 0}</p>
+                        <p className="text-red-200 text-xs mt-1">Classes missed</p>
+                      </div>
+                      <XCircleIcon className="h-12 w-12 opacity-80" />
                     </div>
                   </div>
 
@@ -113,9 +140,10 @@ const Dashboard = () => {
                       <div>
                         <p className="text-purple-100">Attendance %</p>
                         <p className="text-4xl font-bold mt-2">{stats.attendance_percentage}%</p>
+                        <p className="text-purple-200 text-xs mt-1">Overall percentage</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl">📊</div>
+                        <ChartBarIcon className="h-12 w-12 opacity-80" />
                       </div>
                     </div>
                   </div>
@@ -125,7 +153,20 @@ const Dashboard = () => {
 
             <div className="bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="flex items-center justify-between p-6 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <div className="flex items-center space-x-4">
+                    <UserCircleIcon className="h-8 w-8" />
+                    <span className="text-lg font-semibold">My Profile</span>
+                  </div>
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
                 <button
                   onClick={() => navigate('/attendance')}
                   className="flex items-center justify-between p-6 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
@@ -140,12 +181,12 @@ const Dashboard = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate('/attendance')}
+                  onClick={() => navigate('/attendance-calendar')}
                   className="flex items-center justify-between p-6 bg-gradient-to-r from-secondary-500 to-secondary-600 text-white rounded-xl hover:from-secondary-600 hover:to-secondary-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <div className="flex items-center space-x-4">
                     <ChartBarIcon className="h-8 w-8" />
-                    <span className="text-lg font-semibold">View Statistics</span>
+                    <span className="text-lg font-semibold">Calendar View</span>
                   </div>
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
